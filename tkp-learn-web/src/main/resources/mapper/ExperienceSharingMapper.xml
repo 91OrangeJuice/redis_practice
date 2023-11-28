@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.ExperienceSharingMapper">
+
+
+    <select id="getExperienceSharingList" resultType="com.tkp.learn.web.model.bo.ExperienceSharingBo">
+        SELECT
+        lale.id,
+        v.NAME as user_name,
+        v.org_short_name as org_short_name,
+        lale.content,
+        ( SELECT count( 1 ) FROM learn_data_praises ldp WHERE ldp.course_experience_id = lale.id and ldp.work_no = #{experienceSharingVo.workNo}) as is_praise,
+        lale.won_praise_num,
+        lale.top,
+        luhi.head_img_url,
+        lale.publish_time
+        FROM
+        learn_data_lesson_experience lale
+        LEFT JOIN view_user v ON lale.sale_no = v.user_id
+        LEFT JOIN learn_user_head_img luhi ON lale.sale_no = luhi.work_no
+        <where>
+            lale.status = '1' and lale.lesson_id = #{experienceSharingVo.lessonId}
+            <if test="experienceSharingVo.orgNo != null and experienceSharingVo.orgNo !=''">
+                AND lale.branch_code = #{experienceSharingVo.orgNo}
+            </if>
+        </where>
+        order by top,order_no,
+        <if test="experienceSharingVo.orderByCondition =='newly'">
+            lale.publish_time desc
+        </if>
+        <if test="experienceSharingVo.orderByCondition =='hot'">
+            lale.won_praise_num desc
+        </if>
+
+    </select>
+    <update id="addWonPraiseNum">
+		UPDATE
+			learn_data_lesson_experience
+		SET won_praise_num = won_praise_num + 1
+		where
+			id = #{courseExperienceId} and status = '1';
+	</update>
+    <!--<resultMap id="MyLearnDataLessonExperienceMap" type="com.tkp.learn.web.model.bo.PersonExperienceSharingBo">
+        <result property="courseExperienceId" column="courseExperienceId"/>
+        <result property="courseName" column="courseName"/>
+        <result property="content" column="content"/>
+        <result property="publishTime" column="publishTime"/>
+        <result property="wonPraiseNum" column="wonPraiseNum"/>
+        <result property="newWonPraiseNum" column="newWonPraiseNum"/>
+        <collection property="PraiseWorkList" ofType="com.tkp.learn.web.model.bo.PraiseWorkBo" column="user_id">
+            <id property="userId" column="userId"/>
+            <result property="orgShortName" column="orgShortName"/>
+            <result property="userName" column="userName"/>
+        </collection>
+    </resultMap>
+    <select id="getMyLearnDataLessonExperienceList" resultMap="MyLearnDataLessonExperienceMap">
+		SELECT
+		lale.id as courseExperienceId,
+		lale.course_name as courseName,
+		lale.content,
+		lale.publish_time as publishTime,
+		lale.won_praise_num as wonPraiseNum,
+		lale.new_won_praise_num as newWonPraiseNum ,
+		v.NAME as userName,
+		v.org_name as orgShortName,
+		v.user_id as userId
+		FROM
+		learn_data_lesson_experience lale
+		LEFT JOIN learn_data_praises ldp on ldp.course_experience_id=lale.id
+		LEFT JOIN view_user v ON v.user_id = ldp.work_no
+	</select>-->
+
+    <select id="getPraiseWorkList" resultType="com.tkp.learn.web.model.bo.PraiseWorkBo">
+		SELECT
+		v.NAME as userName,
+		v.org_short_name as orgShortName,
+		v.user_id as userId,
+		ldp.status,
+		ldp.id
+		FROM learn_data_praises ldp
+		LEFT JOIN view_user v ON v.user_id = ldp.work_no
+        where ldp.course_experience_id = #{courseExperienceId}
+        and ldp.status in ('01','02')
+        order by ldp.order_no,ldp.create_time desc;
+	</select>
+
+    <resultMap id="MyLearnDataLessonExperienceMap" type="com.tkp.learn.web.model.bo.PersonExperienceSharingBo">
+        <result property="courseExperienceId" column="courseExperienceId"/>
+        <result property="courseName" column="courseName"/>
+        <result property="content" column="content"/>
+        <result property="publishTime" column="publishTime"/>
+        <result property="wonPraiseNum" column="wonPraiseNum"/>
+        <result property="newWonPraiseNum" column="newWonPraiseNum"/>
+        <result property="BaseFileId" column="BaseFileId"/>
+        <collection property="PraiseWorkList" column="courseExperienceId" select="getPraiseWorkList"/>
+    </resultMap>
+
+    <select id="getMyLearnDataLessonExperienceList" resultMap="MyLearnDataLessonExperienceMap">
+		SELECT
+		lale.id as courseExperienceId,
+		lale.course_name as courseName,
+		lale.content,
+		lale.publish_time as publishTime,
+		lale.won_praise_num as wonPraiseNum,
+		(select count(1) from learn_data_praises ldp where ldp.course_experience_id=lale.id and ldp.status='01') as newWonPraiseNum,
+		lale.lesson_id as BaseFileId
+		FROM
+		learn_data_lesson_experience lale
+		where lale.sale_no= #{workNo}
+		and lale.status = '1'
+		order by lale.publish_time desc
+	</select>
+
+    <select id="getThisLearnDataLessonExperience" resultMap="MyLearnDataLessonExperienceMap">
+		SELECT
+		lale.id as courseExperienceId,
+		lale.course_name as courseName,
+		lale.content,
+		lale.publish_time as publishTime,
+		lale.won_praise_num as wonPraiseNum,
+		(select count(1) from learn_data_praises ldp where ldp.course_experience_id=lale.id and ldp.status='01') as newWonPraiseNum,
+		lale.lesson_id as BaseFileId
+		FROM
+		learn_data_lesson_experience lale
+		where lale.id= #{courseExperienceId}
+		and lale.status = '1'
+	</select>
+
+</mapper>

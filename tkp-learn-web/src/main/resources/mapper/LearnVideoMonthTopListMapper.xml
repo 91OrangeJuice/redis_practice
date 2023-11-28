@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnVideoMonthTopListMapper">
+    <sql id="Base_Column_List">
+        id,sale_no,duration,duration_unit,ranking,update_time,year,month
+    </sql>
+
+    <!-- 根据内勤员工ID获取当月排名 -->
+    <select id="getUserMonthRankByUserYearMonth" resultType="com.tkp.learn.web.model.po.LearnVideoMonthTopListPo">
+        SELECT
+          <include refid="Base_Column_List"/>
+        FROM
+            learn_video_month_top_list
+        WHERE
+            sale_no = #{saleNo}
+            AND `year` = #{year}
+            AND `month` = #{month}
+            AND duration_unit = #{unit}
+            order by update_time desc
+            LIMIT 0,1
+    </select>
+
+    <!-- 获取总排名 -->
+    <select id="getMonthTopListByYearMonth" resultType="com.tkp.learn.web.model.po.LearnVideoMonthTopListPo">
+        SELECT
+          <include refid="Base_Column_List"/>
+        FROM
+          learn_video_month_top_list
+        WHERE
+            `year` = #{year}
+            AND `month` = #{month}
+            AND duration_unit = #{unit}
+        <choose>
+            <when test=" null!=order and ''!=order ">
+                order by ranking ${order}
+            </when>
+            <otherwise>
+                order by ranking asc
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="count!=0">
+                LIMIT ${startIndex},${count}
+            </when>
+            <otherwise>
+                LIMIT 0,200
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <!-- 获取总排名 -->
+    <select id="getMonthTopPageByYearMonth" resultType="com.tkp.learn.web.model.po.LearnVideoMonthTopListPo">
+        SELECT
+        a.id,a.sale_no,a.duration,a.duration_unit,a.ranking,
+        b.name,
+        c.short_name as shortName,
+        d.head_img_url as headImgUrl
+        FROM
+        learn_video_month_top_list a
+        INNER JOIN salesman b ON a.sale_no = b.sale_no
+        LEFT JOIN dict_branch c ON b.branch_code = c.id
+        LEFT JOIN learn_user_head_img d on d.work_no=b.sale_no
+        WHERE
+        a.`year` = #{year}
+        AND a.`month` = #{month}
+        AND a.duration_unit = #{unit}
+        <choose>
+            <when test=" null!=order and ''!=order ">
+                order by a.ranking ${order}
+            </when>
+            <otherwise>
+                order by a.ranking asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 获取总排名 -->
+    <select id="getMonthTopCountByYearMonth" resultType="int">
+        SELECT count(*)
+        FROM
+        learn_video_month_top_list
+        WHERE
+        `year` = #{year}
+        AND `month` = #{month}
+        AND duration_unit = #{unit}
+    </select>
+
+
+
+
+</mapper>

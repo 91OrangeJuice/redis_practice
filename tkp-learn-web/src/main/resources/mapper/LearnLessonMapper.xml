@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnLessonMapper">
+
+
+    <select id="queryBaseFileNameById" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+          name
+        FROM learn_lesson  WHERE uuid = #{id}
+    </select>
+
+    <!-- 根据名称查询课程列表 -->
+    <select id="getLessonsByNameAndLabelCode" parameterType="com.tkp.learn.web.model.vo.LessonListCondition"
+            resultType="com.tkp.learn.web.model.vo.LessonItemVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            r.label_id labelCode,
+            IFNULL(a.size, 0) lessonDuration,
+            a.ico_hot_path iconPath,
+            a.create_time createTime
+        FROM
+            learn_lesson a INNER JOIN rel_file_label r ON a.uuid = r.file_uuid
+        WHERE
+            a.file_status = '1'
+            AND NOW( ) BETWEEN a.begin_time AND a.end_time
+            <if test="condition.name != null and condition.name != ''">
+                AND a.name LIKE CONCAT('%', #{condition.name}, '%')
+            </if>
+            <if test="condition.labelCode != null and condition.labelCode != ''">
+                AND r.label_id = #{condition.labelCode}
+            </if>
+        ORDER BY a.create_time
+    </select>
+
+    <!-- 根据标签、名称等条件查询课程列表 -->
+    <select id="getLessonsBy" parameterType="com.tkp.learn.web.model.vo.LessonListCondition"
+            resultType="com.tkp.learn.web.model.vo.LessonItemVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            r.label_id labelCode,
+            IFNULL(a.size, 0) lessonDuration,
+            a.ico_hot_path iconPath,
+            a.create_time createTime
+        FROM
+            learn_lesson a
+            INNER JOIN learn_rel_lesson_category rc ON a.uuid = rc.lesson_id
+            INNER JOIN rel_file_label r ON a.uuid = r.file_uuid
+        WHERE
+            a.file_status = '1'
+            AND NOW( ) BETWEEN a.begin_time AND a.end_time
+            <if test="condition.name != null and condition.name != ''">
+                AND a.name LIKE CONCAT('%', #{condition.name}, '%')
+            </if>
+            <if test="condition.labelCode != null and condition.labelCode != ''">
+                AND r.label_id = #{condition.labelCode}
+            </if>
+            <if test="condition.categoryIds != null and condition.categoryIds.size &gt; 0">
+                AND rc.category_id IN
+                <foreach collection="condition.categoryIds" item="code" open="(" close=")" separator=",">
+                    #{code}
+                </foreach>
+            </if>
+        ORDER BY a.create_time
+    </select>
+
+    <!-- 获取过去30天内各门课程的外勤学习人数 -->
+    <select id="getSalesmanLearnersNumLast30Days" resultType="com.tkp.learn.web.model.bo.LessonLearnersNumBo">
+        SELECT
+            a.uuid lessonId,
+            COUNT(DISTINCT v.salesman_id ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            video_behavior_his v ON a.uuid = v.lesson_id
+            AND v.last_stop_at BETWEEN DATE_SUB( CURDATE( ), INTERVAL 30 DAY ) AND CURDATE( )
+        WHERE
+            a.file_status = '1'
+            AND NOW()  BETWEEN a.begin_time AND a.end_time
+        GROUP BY
+            a.uuid
+        ORDER BY a.create_time
+    </select>
+
+    <!-- 获取过去30天内各门课程的内勤学习人数 -->
+    <select id="getEmployeeLearnersNumLast30Days" resultType="com.tkp.learn.web.model.bo.LessonLearnersNumBo">
+        SELECT
+            a.uuid lessonId,
+            COUNT(DISTINCT v.oa_no ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            employee_video_behavior_history v ON a.uuid = v.lesson_id
+            AND v.last_stop_at BETWEEN DATE_SUB( CURDATE( ), INTERVAL 30 DAY ) AND CURDATE( )
+        WHERE
+            a.file_status = '1'
+            AND NOW()  BETWEEN a.begin_time AND a.end_time
+        GROUP BY
+            a.uuid
+        ORDER BY a.create_time
+    </select>
+
+    <select id="getLessonByLessonId" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.HotLessonBo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            a.ico_hot_path iconPath,
+            a.create_time createTime,
+			IFNULL(r.label_id, 'OPTIONAL') labelCode
+        FROM
+            learn_lesson a LEFT JOIN rel_file_label r ON a.uuid = r.file_uuid
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+
+    <!-- 获取所有课程的id -->
+    <select id="getAllLessonIds" resultType="java.lang.String">
+        SELECT
+            a.uuid lessonId
+        FROM
+            learn_lesson a
+        WHERE
+            a.file_status = '1'
+            AND NOW()  BETWEEN a.begin_time AND a.end_time
+    </select>
+    <update id="updateByLessonId">
+        update learn_lesson set live_end_time=#{liveEndTime},size=#{duration}
+        where uuid=#{lessonId}
+    </update>
+
+    <!-- 根据课程id查询课程详情 -->
+    <select id="getLessonDetailByLessonId" parameterType="java.lang.String"
+        resultType="com.tkp.learn.web.model.vo.LessonDetailVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            a.ico_hot_path imgPreview,
+            a.ico_recommend_path imgLong,
+            a.size lessonDuration,
+            a.url lessonUrl,
+            a.create_time createTime,
+            a.live_begin_time liveBeginTime,
+            a.live_end_time liveEndTime,
+            r.label_id
+        FROM
+            learn_lesson a
+            LEFT JOIN rel_file_label r ON a.uuid = r.file_uuid
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+</mapper>

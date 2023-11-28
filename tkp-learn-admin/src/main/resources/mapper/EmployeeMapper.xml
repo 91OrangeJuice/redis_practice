@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.admin.dao.EmployeeMapper">
+
+    <sql id="Base_Column_List">
+        uuid,user_name,emp_no,oa_no,leader_emp_no,level1_dept_id,level1_dept_name,
+        level2_dept_id,level2_dept_name,level3_dept_id,level3_dept_name,state,eba_org_code1
+    </sql>
+
+    <!-- 根据内勤oa号查找内勤信息 -->
+    <select id="selectByOaNo" parameterType="java.lang.String"
+            resultType="com.tkp.learn.admin.model.common.LoginUser">
+        SELECT
+            a.oa_no workNo,
+            a.user_name name,
+            b.head_img_url headImgUrl,
+            a.level1_dept_id orgCode,
+            a.level1_dept_name orgName,
+            d.short_name orgShortName
+        FROM
+            employee a
+            LEFT JOIN learn_user_head_img b ON a.oa_no = b.work_no
+            LEFT JOIN dict_branch_employee d ON a.level1_dept_id = d.id
+        WHERE
+            a.oa_no = #{oaNo,jdbcType=VARCHAR}
+    </select>
+
+    <select id="queryEmployeePoByUserIds" resultType="com.tkp.learn.admin.model.po.EmployeePo">
+        select
+        <include refid="Base_Column_List"/>
+        from employee
+        where 1=1
+        <if test="userIds != null and userIds.size &gt; 0">
+            and oa_no in
+            <foreach collection="userIds" item="userId" open="(" close=")" separator=",">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

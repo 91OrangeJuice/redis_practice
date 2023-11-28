@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.SalesmanMapper">
+
+    <sql id="Base_Column_List">
+        uuid,name,sale_no,branch_code,branch_name,branch_son_code,branch_son_name,
+        id_no,mobile,rank_channel_code,rank_channel_name,
+        staff_code,staff_name,create_time
+    </sql>
+
+    <!-- 根据业务员工号查找业务员 -->
+    <select id="selectBySaleNo" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.LoginUser">
+        SELECT
+            a.sale_no workNo,
+            a.name,
+            b.head_img_url headImgUrl,
+            a.branch_code orgCode,
+            a.branch_name orgName,
+	        d.short_name orgShortName
+        FROM
+            salesman a
+            LEFT JOIN learn_user_head_img b ON a.sale_no = b.work_no
+	        LEFT JOIN dict_branch d ON a.branch_code = d.id
+        WHERE
+            a.sale_no = #{saleNo, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 根据TK号获取外勤所在机构简称 -->
+    <select id="getOrgShortName" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            d.short_name
+        FROM
+            dict_branch d,
+            salesman s
+        WHERE
+            d.id = s.branch_code
+            AND s.sale_no = #{saleNo, jdbcType=VARCHAR}
+    </select>
+
+    <!-- 根据TK号获取外勤人员观看课程时长等信息 -->
+    <select id="getSalesmanLearnedDuration" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.LessonLearnDurationBo">
+        SELECT
+            a.uuid lessonId,
+            IFNULL(lss.learned_duration, 0) duration,
+            IFNULL(lss.STATUS, 'unlearn') status,
+            lss.begin_time beginTime,
+            lss.finish_time finishTime,
+            lss.last_time lastTime
+        FROM
+            learn_lesson a
+            LEFT JOIN lesson_statistics_salesman lss ON a.uuid = lss.lesson_id
+            AND lss.sale_no = #{saleNo}
+        WHERE
+            a.file_status = '1'
+            AND NOW( ) BETWEEN a.begin_time AND a.end_time
+    </select>
+
+    <!-- 获取外勤人员学习课程人数 -->
+    <select id="getSalesmanLessonLearnersNum" resultType="com.tkp.learn.web.model.bo.LessonLearnersNumBo">
+        SELECT
+            a.uuid lessonId,
+            COUNT( lss.sale_no ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            lesson_statistics_salesman lss ON a.uuid = lss.lesson_id
+            AND lss.status IN ( 'learned', 'learning' )
+        WHERE
+            a.file_status = '1'
+            AND NOW() BETWEEN a.begin_time AND a.end_time
+        GROUP BY
+            a.uuid
+        ORDER BY
+            a.create_time
+    </select>
+
+    <!-- 获取外勤人员指定课程学习人数 -->
+    <select id="getSalesmanLessonLearnersNumByLessonId" parameterType="java.lang.String"
+            resultType="java.lang.Integer">
+        SELECT
+            COUNT( lss.sale_no ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            lesson_statistics_salesman lss ON a.uuid = lss.lesson_id
+            AND lss.status IN ( 'learned', 'learning' )
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+
+    <!-- 外勤人员获取学习历史 -->
+    <select id="getLearnHistory"  parameterType="com.tkp.learn.web.model.vo.LearnHistoryCondition"
+            resultType="com.tkp.learn.web.model.vo.LessonItemVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            IFNULL(r.label_id, 'OPTIONAL') labelCode,
+            IFNULL(a.size, 0) lessonDuration,
+            a.ico_hot_path iconPath,
+            a.create_time createTime,
+            IFNULL(l.learned_duration, 0) learnDuration,
+            IFNULL(l.status, 'unlearn') status,
+            l.last_time lastTime,
+            l.finish_time finishTime,
+            l.begin_time beginTime
+        FROM
+            learn_lesson a
+            INNER JOIN lesson_statistics_salesman l ON a.uuid = l.lesson_id
+            AND l.sale_no = #{condition.workNo}
+            INNER JOIN rel_file_label r ON a.uuid = r.file_uuid
+        WHERE
+            a.file_status = '1'
+            AND NOW() BETWEEN a.begin_time AND a.end_time
+            <if test="condition.labelCodes != null and condition.labelCodes.size &gt; 0">
+                AND r.label_id IN
+                <foreach collection="condition.labelCodes" separator="," open="(" close=")" item="labelCode">
+                    #{labelCode}
+                </foreach>
+            </if>
+            <if test="condition.learnStatus != null and condition.learnStatus.size &gt; 0">
+                AND l.status IN
+                <foreach collection="condition.learnStatus" separator="," open="(" close=")" item="state">
+                    #{state}
+                </foreach>
+            </if>
+        ORDER BY l.last_time DESC, a.create_time DESC
+    </select>
+
+    <!-- 根据课程id查询课程详情 -->
+    <select id="getLessonDetailByLessonIdAndSaleNo" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.vo.LessonDetailVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            a.ico_hot_path imgPreview,
+            a.ico_recommend_path imgLong,
+            a.url lessonUrl,
+            a.create_time createTime,
+            a.live_begin_time liveBeginTime,
+            a.live_end_time liveEndTime,
+            IFNULL(r.label_id, 'OPTIONAL') labelCode,
+            IFNULL(l.status, 'unlearn') status,
+            IFNULL(l.learned_duration, 0) learnedDuration,
+            IFNULL(a.size, 0) lessonDuration,
+            l.begin_time beginTime,
+            l.finish_time finishTime,
+            l.last_time lastTime
+        FROM
+            learn_lesson a
+            LEFT JOIN rel_file_label r ON a.uuid = r.file_uuid
+            LEFT JOIN lesson_statistics_salesman l ON a.uuid = l.lesson_id
+            AND l.sale_no = #{saleNo}
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+</mapper>

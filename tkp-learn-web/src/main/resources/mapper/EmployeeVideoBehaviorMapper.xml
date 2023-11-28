@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.EmployeeVideoBehaviorMapper">
+    <sql id="Base_Column_List">
+        uuid,oa_no,lesson_id,duration,first_play_at,last_stop_at,first_visit_at,last_visit_at,column_id,clue_id,last_visit_city
+          ,last_visit_ip,last_visit_platform,create_time,receive_time,try_times
+    </sql>
+
+    <!-- 根据内勤员工ID获取当月学习时长 -->
+    <select id="getMonthLearningDurationByUserId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select sum(duration) duration
+            FROM
+                employee_video_behavior_history
+            WHERE
+                oa_no = #{oaNo}
+            AND MONTH(last_stop_at)=MONTH(NOW())
+            GROUP BY
+                oa_no
+    </select>
+
+    <!-- 根据内勤员工ID获取总学习时长 -->
+    <select id="getTotalLearningDurationByUserId" parameterType="java.lang.String" resultType="java.lang.Integer">
+       select sum(duration) duration
+            FROM
+                employee_video_behavior_history
+            WHERE
+                oa_no = #{oaNo}
+            GROUP BY
+                oa_no
+    </select>
+
+    <!-- 根据外勤员工ID获取当月学习时长 -->
+    <select id="getAllLearningDurationByDate" resultType="com.tkp.learn.web.model.po.VideoBehaviorHisPo">
+        SELECT a.duration,a.oa_no as oaNo,a.year,a.month
+        FROM (
+            SELECT
+            duration,
+            oa_no,
+            MONTH ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END ) as month,
+            YEAR ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END ) as year
+            FROM
+            employee_video_behavior_history
+            WHERE oa_no = #{oaNo}
+            <if test="year!=0">
+                and YEAR ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END )=#{year}
+            </if>
+            <if test="month!=0">
+                and MONTH ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END )=#{month}
+            </if>
+        ) a
+    </select>
+
+
+</mapper>

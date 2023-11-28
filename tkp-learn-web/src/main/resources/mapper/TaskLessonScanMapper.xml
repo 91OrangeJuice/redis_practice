@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.TaskLessonScanMapper" >
+  <resultMap id="BaseResultMap" type="com.tkp.learn.web.model.po.TaskLessonScanPo" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="lesson_id" property="lessonId" jdbcType="VARCHAR" />
+    <result column="enable" property="enable" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+    id, lesson_id, enable, create_time,update_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from task_lesson_scan
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from task_lesson_scan
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.tkp.learn.web.model.po.TaskLessonScanPo" >
+    insert into task_lesson_scan (id, lesson_id, enable, 
+      create_time)
+    values (#{id,jdbcType=VARCHAR}, #{lessonId,jdbcType=VARCHAR}, #{enable,jdbcType=TINYINT}, 
+      #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.tkp.learn.web.model.po.TaskLessonScanPo" >
+    insert into task_lesson_scan
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="lessonId != null" >
+        lesson_id,
+      </if>
+      <if test="enable != null" >
+        enable,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="lessonId != null" >
+        #{lessonId,jdbcType=VARCHAR},
+      </if>
+      <if test="enable != null" >
+        #{enable,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.tkp.learn.web.model.po.TaskLessonScanPo" >
+    update task_lesson_scan
+    <set >
+      <if test="lessonId != null" >
+        lesson_id = #{lessonId,jdbcType=VARCHAR},
+      </if>
+      <if test="enable != null" >
+        enable = #{enable,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.tkp.learn.web.model.po.TaskLessonScanPo" >
+    update task_lesson_scan
+    set lesson_id = #{lessonId,jdbcType=VARCHAR},
+      enable = #{enable,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+    <select id="selectByLessonId" resultType="java.lang.String">
+      select id  from task_lesson_scan where lesson_id=#{lessonId}
+    </select>
+  <update id="updateEnableTrue">
+    update task_lesson_scan set update_time=now(),enable=true where id=#{id}
+  </update>
+</mapper>

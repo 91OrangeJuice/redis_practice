@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LessonCountMapper">
+
+    <select id="getLessonCountListByOaNo" parameterType="java.lang.String" resultType="com.tkp.learn.web.model.po.LessonCountPo">
+        SELECT count( emp.uuid ) as count,
+                lab.label_id as labelId,
+                emp.state as stateEmp,
+                emp.oa_no as userId
+            FROM
+                employee_lesson_mid emp
+                LEFT JOIN rel_file_label lab ON emp.lesson_id = lab.file_uuid
+            WHERE
+                emp.oa_no = #{oaNo}
+            GROUP BY
+                lab.label_id,
+                emp.state,
+                emp.oa_no
+    </select>
+
+    <select id="getLessonCountListBySaleNo" parameterType="java.lang.String" resultType="com.tkp.learn.web.model.po.LessonCountPo">
+       	SELECT count( sal.id ) as count,
+            lab.label_id as labelId,
+            sal.status as stateSal,
+            sal.sale_no as userId
+        FROM
+            lesson_statistics_salesman sal
+            LEFT JOIN rel_file_label lab ON sal.lesson_id = lab.file_uuid
+        WHERE
+            sal.sale_no = #{saleNo}
+        GROUP BY
+            lab.label_id,
+            sal.status,
+            sal.sale_no;
+    </select>
+
+
+</mapper>

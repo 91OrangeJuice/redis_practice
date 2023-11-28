@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.archive.task.dao.TaskTopListMapper">
+
+
+    <select id="getSalesDurationDetail" resultType="com.tkp.learn.archive.task.model.po.TaskTopListPo">
+        SELECT
+            salesman_id AS saleNo,
+            sum( duration ) AS duration,
+            DATE_FORMAT( create_time, '%Y-%m-%d' ) AS last_stop_at
+        FROM
+            video_behavior_his_temp
+        GROUP BY
+            salesman_id,
+            DATE_FORMAT( create_time, '%Y-%m-%d' )
+        ORDER BY
+            create_time,salesman_id
+	    LIMIT #{startIndex},#{size}
+    </select>
+
+    <insert id="insertMonthTopList">
+        insert into learn_video_month_top_list
+        <trim prefix="(" suffix=")">
+            id,sale_no,duration,duration_unit,ranking,update_time,year,month
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.saleNo},
+            #{item.duration},
+            #{item.durationUnit},
+            #{item.ranking},
+            #{item.updateTime},
+            #{item.year},
+            #{item.month}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteMonthTopList">
+        DELETE
+        FROM
+            learn_video_month_top_list
+        WHERE
+            YEAR = #{year}
+            AND MONTH = #{month}
+    </delete>
+
+    <select id="getMonthTopListFromLearnDataVideoMonth"
+            resultType="com.tkp.learn.archive.task.model.po.LearnDataVideoDayPo">
+            SELECT a.sale_no AS saleNo, ceil(sum(a.duration)/60) AS duration, a.`month`, a.`year`
+            FROM learn_data_video_month a
+            INNER JOIN salesman b on a.sale_no=b.sale_no
+						where a.`month`=#{month}
+						and a.`year`=#{year}
+            GROUP BY
+                a.sale_no,
+                a.`month`,
+                a.`year`
+            ORDER BY
+                ceil(sum(a.duration)/60) DESC,
+                a.sale_no
+	        LIMIT #{startIndex},#{size}
+    </select>
+
+    <select id="getYearTopListFromViewLearnDataVideoYear"
+            resultType="com.tkp.learn.archive.task.model.po.LearnDataVideoDayPo">
+        SELECT a.sale_no AS saleNo, ceil(sum(a.duration)/60) AS duration, a.`year`
+            FROM learn_data_video_year a
+            INNER JOIN salesman b on a.sale_no=b.sale_no
+            where a.`year`=#{year}
+            GROUP BY
+                a.sale_no,
+                a.`year`
+            ORDER BY
+                ceil(sum(a.duration)/60) DESC,
+                a.sale_no
+	        LIMIT #{startIndex},#{size}
+    </select>
+
+    <insert id="insertYearTopList">
+        insert into learn_video_year_top_list
+        <trim prefix="(" suffix=")">
+            id,sale_no,duration,duration_unit,ranking,update_time,year
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.saleNo},
+            #{item.duration},
+            #{item.durationUnit},
+            #{item.ranking},
+            #{item.updateTime},
+            #{item.year}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteYearTopList">
+        DELETE
+        FROM
+            learn_video_year_top_list
+        WHERE
+            YEAR = #{year}
+    </delete>
+
+    <select id="getYearDataFromLearnDataVideoMonth"
+            resultType="com.tkp.learn.archive.task.model.po.LearnDataVideoMonthPo">
+        SELECT sale_no as saleNo,
+            year,
+            sum( duration ) as duration
+        FROM
+            learn_data_video_month
+        WHERE
+            YEAR = #{year}
+        GROUP BY
+            sale_no
+        LIMIT #{startIndex},#{size}
+    </select>
+
+    <select id="queryLearnDataVideoMonth" resultType="com.tkp.learn.archive.task.model.po.LearnDataVideoMonthPo">
+            SELECT sale_no as saleNo,
+                month,
+                year,
+                duration as duration
+            FROM
+                learn_data_video_month
+            WHERE
+                YEAR = #{year} and MONTH =#{month} and sale_no=#{saleNo}
+    </select>
+
+    <insert id="insertLearnDataVideoMonth">
+        insert into learn_data_video_month
+        <trim prefix="(" suffix=")">
+            id,sale_no,duration,year,month,update_time,create_time
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.saleNo},
+            #{item.duration},
+            #{item.year},
+            #{item.month},
+            #{item.updateTime},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateLearnDataVideoMonthById">
+        <foreach collection="pos" item="item" index="index" separator=";">
+            update learn_data_video_month set duration=#{item.duration},update_time=#{item.updateTime}
+            where year=#{item.year} and sale_no=#{item.saleNo} and month=#{item.month}
+        </foreach>
+    </update>
+
+    <delete id="deleteLearnDataVideoMonth">
+        DELETE
+        FROM
+        learn_data_video_month
+        WHERE
+        YEAR = #{year}
+        <if test=" month!=0 ">
+            and MONTH = #{month}
+        </if>
+    </delete>
+
+    <select id="queryLearnDataVideoYear" resultType="com.tkp.learn.archive.task.model.po.LearnDataVideoYearPo">
+            SELECT sale_no as saleNo,
+                year,
+                duration as duration
+            FROM
+                learn_data_video_year
+            WHERE
+                YEAR = #{year} and sale_no=#{saleNo}
+    </select>
+
+    <insert id="insertLearnDataVideoYear">
+        insert into learn_data_video_year
+        <trim prefix="(" suffix=")">
+            id,sale_no,duration,year,update_time,create_time
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.saleNo},
+            #{item.duration},
+            #{item.year},
+            #{item.updateTime},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateLearnDataVideoYearById">
+        <foreach collection="pos" item="item" index="index" separator=";">
+            update learn_data_video_year set duration=#{item.duration},update_time=#{item.updateTime}
+            where year=#{item.year} and sale_no=#{item.saleNo}
+        </foreach>
+    </update>
+
+    <select id="queryVideoBehaviorHisTempPoPage" resultType="com.tkp.learn.archive.task.model.po.VideoBehaviorHisPo"
+            parameterType="java.lang.Integer">
+        SELECT  id
+                ,salesman_id
+                ,duration
+                ,first_play_at
+                ,last_stop_at
+                ,first_visit_at
+                ,last_visit_at
+                ,last_visit_city
+                ,last_visit_ip
+                ,last_visit_platform
+                ,column_id
+                ,lesson_id
+                ,retry_times
+                ,salesman_status
+                ,error_message
+                ,create_time
+                ,clue_id
+                ,receive_time
+        FROM
+            video_behavior_his_temp
+        where last_stop_at is not null
+	    LIMIT #{startIndex},#{size}
+    </select>
+
+    <select id="queryVideoBehaviorTempException" resultType="com.tkp.learn.archive.task.model.po.VideoBehaviorHisPo">
+        SELECT  id
+                ,salesman_id
+                ,duration
+                ,first_play_at
+                ,last_stop_at
+                ,first_visit_at
+                ,last_visit_at
+                ,last_visit_city
+                ,last_visit_ip
+                ,last_visit_platform
+                ,column_id
+                ,lesson_id
+                ,retry_times
+                ,salesman_status
+                ,error_message
+                ,create_time
+                ,clue_id
+                ,receive_time
+        FROM
+            video_behavior_his_temp
+        where last_stop_at is null
+    </select>
+
+    <select id="queryVideoBehaviorBakException" resultType="com.tkp.learn.archive.task.model.po.VideoBehaviorHisPo">
+        SELECT  id
+                ,salesman_id
+                ,duration
+                ,first_play_at
+                ,last_stop_at
+                ,first_visit_at
+                ,last_visit_at
+                ,last_visit_city
+                ,last_visit_ip
+                ,last_visit_platform
+                ,column_id
+                ,lesson_id
+                ,retry_times
+                ,salesman_status
+                ,error_message
+                ,create_time
+                ,clue_id
+                ,receive_time
+        FROM
+            video_behavior_his_bak
+        where last_stop_at is null
+    </select>
+
+    <select id="queryVideoBehaviorHisBakPoPage" resultType="com.tkp.learn.archive.task.model.po.VideoBehaviorHisPo"
+            parameterType="java.lang.Integer">
+        SELECT   id
+                ,salesman_id
+                ,duration
+                ,first_play_at
+                ,last_stop_at
+                ,first_visit_at
+                ,last_visit_at
+                ,last_visit_city
+                ,last_visit_ip
+                ,last_visit_platform
+                ,column_id
+                ,lesson_id
+                ,retry_times
+                ,salesman_status
+                ,error_message
+                ,create_time
+                ,clue_id
+                ,receive_time
+        FROM
+            video_behavior_his_bak
+        where last_stop_at is not null
+	    LIMIT #{startIndex},#{size}
+    </select>
+
+    <insert id="initVideoBehVaviorHisBak">
+        DROP TABLE IF EXISTS `video_behavior_his_bak`;
+        CREATE TABLE video_behavior_his_bak LIKE video_behavior_his;
+        INSERT INTO  video_behavior_his_bak SELECT * FROM video_behavior_his;
+    </insert>
+
+    <insert id="insertVideoBehaviorHis">
+        insert into video_behavior_his
+        <trim prefix="(" suffix=")">
+            id
+            ,salesman_id
+            ,duration
+            ,first_play_at
+            ,last_stop_at
+            ,first_visit_at
+            ,last_visit_at
+            ,last_visit_city
+            ,last_visit_ip
+            ,last_visit_platform
+            ,column_id
+            ,lesson_id
+            ,retry_times
+            ,salesman_status
+            ,error_message
+            ,create_time
+            ,clue_id
+            ,receive_time
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id}
+            ,#{item.salesmanId}
+            ,#{item.duration}
+            ,#{item.firstPlayAt}
+            ,#{item.lastStopAt}
+            ,#{item.firstVisitAt}
+            ,#{item.lastVisitAt}
+            ,#{item.lastVisitCity}
+            ,#{item.lastVisitIp}
+            ,#{item.lastVisitPlatform}
+            ,#{item.columnId}
+            ,#{item.lessonId}
+            ,#{item.retryTimes}
+            ,#{item.salesmanStatus}
+            ,#{item.errorMessage}
+            ,#{item.createTime}
+            ,#{item.clueId}
+            ,#{item.receiveTime}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertVideoBehaviorHisTemp">
+        insert into video_behavior_his_temp
+        <trim prefix="(" suffix=")">
+            id
+            ,salesman_id
+            ,duration
+            ,first_play_at
+            ,last_stop_at
+            ,first_visit_at
+            ,last_visit_at
+            ,last_visit_city
+            ,last_visit_ip
+            ,last_visit_platform
+            ,column_id
+            ,lesson_id
+            ,retry_times
+            ,salesman_status
+            ,error_message
+            ,create_time
+            ,clue_id
+            ,receive_time
+        </trim>
+        values
+        <foreach collection="pos" item="item" index="index" separator=",">
+            (
+            #{item.id}
+            ,#{item.salesmanId}
+            ,#{item.duration}
+            ,#{item.firstPlayAt}
+            ,#{item.lastStopAt}
+            ,#{item.firstVisitAt}
+            ,#{item.lastVisitAt}
+            ,#{item.lastVisitCity}
+            ,#{item.lastVisitIp}
+            ,#{item.lastVisitPlatform}
+            ,#{item.columnId}
+            ,#{item.lessonId}
+            ,#{item.retryTimes}
+            ,#{item.salesmanStatus}
+            ,#{item.errorMessage}
+            ,#{item.createTime}
+            ,#{item.clueId}
+            ,#{item.receiveTime}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteVideoBehaviorHisTemp">
+        DELETE FROM video_behavior_his_temp
+        WHERE id IN
+        <foreach collection="pos" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteVideoBehaviorHisBak">
+        DELETE FROM video_behavior_his_bak
+        WHERE id IN
+        <foreach collection="pos" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </delete>
+
+</mapper>

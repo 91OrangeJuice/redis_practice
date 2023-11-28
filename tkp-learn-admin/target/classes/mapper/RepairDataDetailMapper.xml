@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.admin.dao.RepairDataDetailMapper">
+
+    <sql id="Base_Column_List">
+        id,user_no,user_type,white_phone,lesson_id,learning_style,question_descript,learned_time,last_commit_user
+        ,last_commit_time,approver,approve_time,current_status,create_user,create_time,update_user,update_time,behavior_id
+    </sql>
+
+    <insert id="insertRepairDataDetail">
+        insert into repair_data_detail
+        <trim prefix="(" suffix=")">
+            <include refid="Base_Column_List"/>
+        </trim>
+        values
+        <foreach collection="param" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.userNo},
+            #{item.userType},
+            #{item.whitePhone},
+            #{item.lessonId},
+            #{item.learningStyle},
+            #{item.questionDescript},
+            #{item.learnedTime},
+            #{item.lastCommitUser},
+            #{item.lastCommitTime},
+            #{item.approver},
+            #{item.approveTime},
+            #{item.currentStatus},
+            #{item.createUser},
+            #{item.createTime},
+            #{item.updateUser},
+            #{item.updateTime},
+            #{item.behaviorId}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateRepairDataDetail">
+        <foreach collection="param" item="item" index="index" separator=";">
+            update repair_data_detail
+            <trim prefix="set" suffixOverrides=",">
+            <if test=" item.userNo!=null and  item.userNo!='' ">
+                user_no=#{item.userNo},
+            </if>
+            <if test=" item.userType!=null and  item.userType!='' ">
+                user_type=#{item.userType},
+            </if>
+            <if test=" item.whitePhone!=null and  item.whitePhone!='' ">
+                white_phone=#{item.whitePhone},
+            </if>
+            <if test=" item.lessonId!=null and  item.lessonId!='' ">
+                lesson_id=#{item.lessonId},
+            </if>
+            <if test=" item.learningStyle!=null and  item.learningStyle!='' ">
+                learning_style=#{item.learningStyle},
+            </if>
+            <if test=" item.questionDescript!=null and  item.questionDescript!='' ">
+                question_descript=#{item.questionDescript},
+            </if>
+            <if test=" item.learnedTime!=null ">
+                learned_time=#{item.learnedTime},
+            </if>
+            <if test=" item.lastCommitUser!=null and  item.lastCommitUser!='' ">
+                last_commit_user=#{item.lastCommitUser},
+            </if>
+            <if test=" item.lastCommitTime!=null ">
+                last_commit_time=#{item.lastCommitTime},
+            </if>
+            <if test=" item.approver!=null and  item.approver!='' ">
+                approver=#{item.approver},
+            </if>
+            <if test=" item.approveTime!=null ">
+                approve_time=#{item.approveTime},
+            </if>
+            <if test=" item.currentStatus!=null and  item.currentStatus!='' ">
+                current_status=#{item.currentStatus},
+            </if>
+            <if test=" item.createUser!=null and  item.createUser!='' ">
+                create_user=#{item.createUser},
+            </if>
+            <if test=" item.createTime!=null ">
+                create_time=#{item.createTime},
+            </if>
+            <if test=" item.updateUser!=null and  item.updateUser!='' ">
+                update_user=#{item.updateUser},
+            </if>
+            <if test=" item.updateTime!=null ">
+                update_time=#{item.updateTime},
+            </if>
+            <if test=" item.behaviorId!=null and item.behaviorId!='' ">
+                behavior_id=#{item.behaviorId},
+            </if>
+            <if test=" item.approverContext!=null and item.approverContext!='' ">
+                approver_Context=#{item.approverContext},
+            </if>
+            </trim>
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getRepairDataDetailSearchList" resultType="com.tkp.learn.admin.model.bo.RepairDataDetailBo">
+        SELECT
+        r.id,
+        u.branch_code,
+        u.branch_name,
+        r.user_no,
+        u.user_name,
+        r.user_type,
+        (CASE WHEN r.user_type = 'SALESMAN' THEN '外勤' ELSE '内勤' END ) as userTypeName,
+        r.white_phone,
+        r.lesson_id,
+        (
+        SELECT
+        NAME
+        FROM
+        learn_lesson
+        WHERE
+        uuid = r.lesson_id
+        ) AS lessonName,
+        r.learning_style,
+        (select learning_style_name from dict_learning_style where learning_style = r.learning_style) as learning_style_name,
+        r.question_descript,
+        r.learned_time,
+        r.last_commit_user,
+        (select user_name from view_user_all where user_no = r.last_commit_user ) as lastCommitUserName,
+        r.last_commit_time,
+        r.approver,
+        r.approve_time,
+        r.current_status,
+        (select repair_name from dict_repair where repair_code = r.current_status) repair_name,
+        r.approver_context as operation_content
+        FROM
+        repair_data_detail r
+        LEFT JOIN view_user_all u ON r.user_no = u.user_no
+        AND r.user_type = u.user_type
+        WHERE 1=1
+        <if test="queryDataParamVo.branchCode !=null and queryDataParamVo.branchCode !=''">
+            and u.branch_code = #{queryDataParamVo.branchCode}
+        </if>
+
+        <if test="queryDataParamVo.name !=null and queryDataParamVo.name !=''">
+            AND u.user_name LIKE CONCAT(#{queryDataParamVo.name}, '%')
+        </if>
+
+        <if test="queryDataParamVo.lessonId !=null and queryDataParamVo.lessonId !=''">
+            AND r.lesson_id = #{queryDataParamVo.lessonId}
+        </if>
+
+        <if test="queryDataParamVo.operationType !=null and queryDataParamVo.operationType.size !=0">
+            and r.current_status in
+            <foreach collection="queryDataParamVo.operationType" item="operation" open="(" close=")" separator=",">
+                #{operation.code}
+            </foreach>
+        </if>
+
+        order by r.learned_time desc
+    </select>
+
+    <select id="queryRepairDataDetail" resultType="com.tkp.learn.admin.model.po.RepaireDataPo">
+        select
+        <include refid="Base_Column_List"/>
+        from repair_data_detail
+        where 1=1
+        <choose>
+            <when test="ids !=null and ids.size &gt; 0">
+                and id in
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                and 1=0
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getSaleStatistics" resultType="com.tkp.learn.admin.model.bo.StatisticsDataBo">
+        SELECT lesson_id as lessonId,sale_no as userId,learned_duration as duration,percentage,
+        status,last_time as lastTime
+        FROM lesson_statistics_salesman
+        WHERE lesson_id=#{lessonId}
+        and sale_no=#{userId}
+        limit 0,1
+    </select>
+
+    <select id="getEmployeeStatistics" resultType="com.tkp.learn.admin.model.bo.StatisticsDataBo">
+        select lesson_id as lessonId,oa_no as userId,learned_duration as duration,percentage,
+        state as status,latest_learned_time as lastTime
+        from employee_lesson_mid
+        where lesson_id=#{lessonId}
+        and oa_no=#{userId}
+        limit 0,1
+    </select>
+
+    <select id="getLessonByIds" resultType="com.tkp.learn.admin.model.bo.LessonBo">
+        select uuid,name,type,size,begin_time as beginTime
+        from learn_lesson
+        where 1=1
+        <choose>
+            <when test="ids !=null and ids.size &gt; 0">
+                and uuid in
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                and 1=0
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="inserVideoBehavior" parameterType="com.tkp.learn.admin.model.po.VideoBehaviorPo">
+        INSERT INTO video_behavior
+        (id,salesman_id,column_id,create_time,retry_times,error_message,duration,lesson_id,first_play_at,last_stop_at,receive_time)
+        VALUES (#{po.id},
+                #{po.salesmanId},
+                #{po.columnId},
+                #{po.createTime},
+                #{po.retryTimes},
+                #{po.errorMessage},
+                #{po.duration},
+                #{po.lessonId},
+                #{po.firstPlayAt},
+                #{po.lastStopAt},
+                #{po.receiveTime}
+                )
+    </insert>
+
+    <insert id="inserEmployeeVideoBehavior" parameterType="com.tkp.learn.admin.model.po.EmployeeVideoBehaviorPo">
+        INSERT INTO employee_video_behavior
+        (UUID,oa_no,column_id,create_time,try_times,duration,lesson_id,first_play_at,last_stop_at,receive_time)
+        VALUES (#{po.uuid},
+                #{po.oaNo},
+                #{po.columnId},
+                #{po.createTime},
+                #{po.tryTimes},
+                #{po.duration},
+                #{po.lessonId},
+                #{po.firstPlayAt},
+                #{po.lastStopAt},
+                #{po.receiveTime}
+                )
+    </insert>
+
+    <insert id="saveOperation">
+        insert into repair_data_operation
+        (id
+        ,detail_id
+        ,operation_type
+        ,operation_content
+        ,operation_user
+        ,operation_time
+        ,error_message)
+        values
+        <foreach collection="param" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.detailId},
+            #{item.operationType},
+            #{item.operationContent},
+            #{item.operationUser},
+            #{item.operationTime},
+            #{item.errorMessage}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

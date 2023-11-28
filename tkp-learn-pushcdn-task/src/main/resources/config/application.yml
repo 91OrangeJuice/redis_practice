@@ -1,0 +1,6 @@
+#公共配置
+debug: false
+
+spring:
+ profiles:
+   active: sit

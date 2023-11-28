@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnDefCategoryMapper">
+
+    <!-- 获取课程顶部分类列表 -->
+    <select id="getTopCategories" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.CategoryBo">
+        SELECT
+            c.code categoryCode,
+            c.name categoryName,
+            c.icon iconPath,
+            c.multi_select multiSelect,
+            c.top_order_no sortNo
+        FROM
+            learn_def_category c
+        WHERE
+            c.display = 1
+            AND c.topped = 0
+        ORDER BY c.top_order_no
+    </select>
+
+    <select id="getCategoriesByUpperId" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.CategoryBo">
+        SELECT
+            c.code categoryCode,
+            c.name categoryName,
+            c.icon iconPath,
+            c.multi_select multiSelect,
+            c.order_no sortNo
+        FROM
+            learn_def_category c
+        WHERE
+            c.display = 1
+            AND c.upper_id = #{upperId}
+        ORDER BY c.order_no
+    </select>
+
+    <select id="getNonBusinessCategories" resultType="com.tkp.learn.web.model.bo.CategoryDetailBo">
+        SELECT
+            c.code categoryCode,
+            c.name categoryName,
+            c.upper_id upperCategoryCode,
+            c.level,
+            c.icon iconPath,
+            c.multi_select multiSelect,
+            c.order_no sortNo
+        FROM
+            learn_def_category c
+        WHERE
+            c.display = 1
+            AND c.upper_id != 'business'
+            AND c.code != 'business'
+        ORDER BY c.order_no
+    </select>
+
+</mapper>

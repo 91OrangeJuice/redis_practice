@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.DictLabelMapper">
+
+    <!-- 查询重要程度标签列表 -->
+    <select id="getLabels" resultType="com.tkp.learn.web.model.vo.LabelVo">
+        SELECT
+            l.id code,
+            l.name name,
+            l.sort_no sortNo
+        FROM
+            dict_label l
+        ORDER BY l.sort_no
+    </select>
+</mapper>

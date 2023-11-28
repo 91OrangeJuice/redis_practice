@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.EmployeeMapper">
+
+    <sql id="Base_Column_List">
+        uuid,user_name,emp_no,oa_no,leader_emp_no,level1_dept_id,level1_dept_name,
+        level2_dept_id,level2_dept_name,level3_dept_id,level3_dept_name,state
+    </sql>
+
+    <!-- 根据内勤oa号查找内勤信息 -->
+    <select id="selectByOaNo" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.LoginUser">
+        SELECT
+            a.oa_no workNo,
+            a.user_name name,
+            b.head_img_url headImgUrl,
+            a.level1_dept_id orgCode,
+            a.level1_dept_name orgName,
+            d.short_name orgShortName
+        FROM
+            employee a
+            LEFT JOIN learn_user_head_img b ON a.oa_no = b.work_no
+            LEFT JOIN dict_branch_employee d ON a.level1_dept_id = d.id
+        WHERE
+            a.oa_no = #{oaNo,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 获取内勤人员所有课程的视频观看时长等信息  -->
+    <select id="getEmployeeLearnedDuration" parameterType="java.lang.String"
+            resultType="com.tkp.learn.web.model.bo.LessonLearnDurationBo">
+        SELECT
+            a.uuid lessonId,
+            IFNULL( e.learned_duration, 0 ) duration,
+            IFNULL( e.state, 'unlearn' ) status,
+            e.begin_time beginTime,
+            e.finish_time finishTime,
+            e.latest_learned_time lastTime
+        FROM
+            learn_lesson a
+            LEFT JOIN employee_lesson_mid e ON a.uuid = e.lesson_id
+            AND e.oa_no = #{saleNo}
+        WHERE
+            a.file_status = '1'
+            AND NOW( ) BETWEEN a.begin_time AND a.end_time
+        ORDER BY a.create_time
+    </select>
+
+    <!-- 获取内勤人员学习课程人数 -->
+    <select id="getEmployeeLessonLearnersNum" resultType="com.tkp.learn.web.model.bo.LessonLearnersNumBo">
+        SELECT
+            a.uuid lessonId,
+            COUNT( e.oa_no ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            employee_lesson_mid e ON a.uuid = e.lesson_id
+            AND e.state IN ( 'learned', 'learning' )
+        WHERE
+            a.file_status = '1'
+            AND NOW() BETWEEN a.begin_time AND a.end_time
+        GROUP BY
+            a.uuid
+        ORDER BY
+            a.create_time
+    </select>
+
+    <!-- 获取内勤人员指定课程学习人数 -->
+    <select id="getEmployeeLessonLearnersNumByLessonId" parameterType="java.lang.String"
+            resultType="java.lang.Integer">
+        SELECT
+            COUNT( e.oa_no ) learnersNum
+        FROM
+            learn_lesson a LEFT JOIN
+            employee_lesson_mid e ON a.uuid = e.lesson_id
+            AND e.state IN ( 'learned', 'learning' )
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+
+    <!-- 内勤人员获取学习历史 -->
+    <select id="getLearnHistory"  parameterType="com.tkp.learn.web.model.vo.LearnHistoryCondition"
+            resultType="com.tkp.learn.web.model.vo.LessonItemVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            IFNULL(r.label_id, 'OPTIONAL') labelCode,
+            IFNULL(a.size, 0) lessonDuration,
+            a.ico_hot_path iconPath,
+            a.create_time createTime,
+            IFNULL(e.learned_duration, 0) learnDuration,
+            IFNULL(e.state, 'unlearn') status,
+            e.latest_learned_time lastTime,
+            e.finish_time finishTime,
+            e.begin_time beginTime
+        FROM
+            learn_lesson a
+            INNER JOIN rel_file_label r ON a.uuid = r.file_uuid
+            INNER JOIN employee_lesson_mid e ON a.uuid = e.lesson_id
+        WHERE
+            a.file_status = '1'
+            AND NOW() BETWEEN a.begin_time AND a.end_time
+            AND e.oa_no = #{condition.workNo}
+            <if test="condition.labelCodes != null and condition.labelCodes.size &gt; 0">
+                AND r.label_id IN
+                <foreach collection="condition.labelCodes" separator="," open="(" close=")" item="labelCode">
+                    #{labelCode}
+                </foreach>
+            </if>
+            <if test="condition.learnStatus != null and condition.learnStatus.size &gt; 0">
+                AND e.state IN
+                <foreach collection="condition.learnStatus" separator="," open="(" close=")" item="state">
+                    #{state}
+                </foreach>
+            </if>
+        ORDER BY e.latest_learned_time DESC, a.create_time DESC
+    </select>
+
+    <!-- 内勤人员获取课程详情-->
+    <select id="getLessonDetailByLessonIdAndOaNo"  parameterType="com.tkp.learn.web.model.vo.LearnHistoryCondition"
+            resultType="com.tkp.learn.web.model.vo.LessonDetailVo">
+        SELECT
+            a.uuid lessonId,
+            a.name lessonName,
+            a.description,
+            a.url lessonUrl,
+            a.ico_hot_path imgPreview,
+            a.ico_recommend_path imgLong,
+            a.create_time createTime,
+            a.live_begin_time liveBeginTime,
+            a.live_end_time liveEndTime,
+            IFNULL(r.label_id, 'OPTIONAL') labelCode,
+            IFNULL(a.size, 0) lessonDuration,
+            IFNULL(e.learned_duration, 0) learnedDuration,
+            IFNULL(e.state, 'unlearn') status,
+            e.latest_learned_time lastTime,
+            e.finish_time finishTime,
+            e.begin_time beginTime
+        FROM
+            learn_lesson a
+            INNER JOIN rel_file_label r ON a.uuid = r.file_uuid
+            INNER JOIN employee_lesson_mid e ON a.uuid = e.lesson_id
+            AND e.oa_no = #{oaNo}
+        WHERE
+            a.uuid = #{lessonId}
+    </select>
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnDataPraisesMapper">
+
+    <select id="getCurrentUserNewPraiseCountByUserId" resultType="java.lang.Integer">
+        SELECT count( id )
+            FROM
+                learn_data_praises
+            WHERE
+                won_praise_work_no = #{userId}
+                AND STATUS = #{status};
+    </select>
+
+    <update id="updateStatusById" >
+        update learn_data_praises set STATUS = #{status} where status = '01'
+        and id in
+        <foreach collection="idList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+    </update>
+</mapper>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.RelLessonMengzhuMapper">
+    <select id="selectByVideoId" resultType="java.lang.String">
+        select lesson_id from rel_lesson_mengzhu where video_id=#{videoId}
+    </select>
+</mapper>

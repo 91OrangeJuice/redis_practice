@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.archive.task.dao.LogTaskLearnDataMapper">
+
+    <sql id="Base_Column_List">
+        id,task_name,task_code,begin_date,end_date,status,statistical_beginTime,statistical_endTime
+    </sql>
+    <sql id="Base_Table">
+        log_task_learn_data_video
+    </sql>
+
+    <select id="getTaskLogById" resultType="com.tkp.learn.archive.task.model.po.LogTaskLearnDataPo">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        <include refid="Base_Table"/>
+        WHERE
+        id = #{id}
+    </select>
+
+    <select id="getLastTaskLogByCode" resultType="com.tkp.learn.archive.task.model.po.LogTaskLearnDataPo">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        <include refid="Base_Table"/>
+        WHERE
+        task_code = #{taskCode}
+        AND status=#{status}
+        ORDER BY end_date DESC
+        LIMIT 0,1
+    </select>
+
+    <select id="getLastTaskLogByCodeSingle" resultType="com.tkp.learn.archive.task.model.po.LogTaskLearnDataPo">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM
+        <include refid="Base_Table"/>
+        WHERE
+        task_code = #{taskCode}
+        ORDER BY end_date DESC
+        LIMIT 0,1
+    </select>
+
+    <insert id="saveTaskLog" parameterType="com.tkp.learn.archive.task.model.po.LogTaskLearnDataPo">
+        INSERT INTO
+        <include refid="Base_Table"/>
+        (<include refid="Base_Column_List"/>)
+        VALUE
+        (#{id},#{taskName},#{taskCode},#{beginDate},#{endDate},#{status},#{statisticalBeginTime},#{statisticalEndTime})
+    </insert>
+
+    <update id="updateTaskLog" parameterType="com.tkp.learn.archive.task.model.po.LogTaskLearnDataPo">
+        UPDATE
+        <include refid="Base_Table"/>
+        SET end_Date=#{endDate},
+        status=#{status}
+        WHERE id=#{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.DictBranchEmployeeMapper">
+
+    <!-- 根据内勤oa号查找内勤所在机构的简称 -->
+    <select id="getOrgShortNameByOaNo" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            d.short_name
+        FROM
+            dict_branch_employee d,
+            employee e
+        WHERE
+            d.id = e.level1_dept_id
+            AND e.oa_no = #{oaNo,jdbcType=VARCHAR}
+    </select>
+</mapper>

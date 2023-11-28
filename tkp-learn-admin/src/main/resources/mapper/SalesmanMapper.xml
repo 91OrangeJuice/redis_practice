@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.admin.dao.SalesmanMapper">
+
+    <sql id="Base_Column_List">
+        uuid,name,sale_no,branch_code,branch_name,branch_son_code,branch_son_name,
+        id_no,mobile,rank_channel_code,rank_channel_name,
+        staff_code,staff_name,create_time
+    </sql>
+
+    <!-- 根据业务员工号查找业务员 -->
+    <select id="selectBySaleNo" parameterType="java.lang.String"
+            resultType="com.tkp.learn.admin.model.common.LoginUser">
+        SELECT
+            a.sale_no workNo,
+            a.name,
+            b.head_img_url headImgUrl,
+            a.branch_code orgCode,
+            a.branch_name orgName,
+	        d.short_name orgShortName
+        FROM
+            salesman a
+            LEFT JOIN learn_user_head_img b ON a.sale_no = b.work_no
+	        LEFT JOIN dict_branch d ON a.branch_code = d.id
+        WHERE
+            a.sale_no = #{saleNo, jdbcType=VARCHAR}
+    </select>
+
+    <select id="querySalesmanByUserIds" resultType="com.tkp.learn.admin.model.po.SalesmanPo">
+        select
+        <include refid="Base_Column_List"/>
+        from salesman
+        where 1=1
+        <if test="userIds != null and userIds.size &gt; 0">
+            and sale_no in
+            <foreach collection="userIds" item="userId" open="(" close=")" separator=",">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnSlideShowMapper">
+
+    <select id="getBannerList" resultType="com.tkp.learn.web.model.vo.BannerVo">
+        SELECT
+            a.code bannerCode,
+            a.name bannerName,
+            a.img_path iconPath,
+            a.order_no sortNo
+        FROM
+            learn_slide_show a
+        WHERE
+            a.display = 1
+            AND NOW() BETWEEN a.begin_time AND a.end_time
+        ORDER BY a.order_no
+    </select>
+</mapper>

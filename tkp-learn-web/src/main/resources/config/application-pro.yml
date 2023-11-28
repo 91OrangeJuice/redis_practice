@@ -1,0 +1,55 @@
+#01_server配置
+server:
+  port: 8887
+  servlet:
+    context-path: /tkp-learn-web
+      
+#02_spring配置
+spring:
+  datasource:
+    url: jdbc:mysql://10.130.105.129:3306/tkp_repository?characterEncoding=utf8&useSSL=false
+    username: tkprepository
+    password: "tkprepository"
+    dbcp2:
+      initialSize: 4
+      maxTotal: 10
+      maxIdle: 8
+      minIdle: 4
+      maxWaitMillis: 1000
+      test-while-idle: true
+      # Oracle请使用select 1 from dual
+      validation-query: select 'x'
+
+#03_logger配置
+logging:
+  level:
+    root: WARN
+    "com.tkp": DEBUG
+  pattern:
+      console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%thread] %level %logger{50} - %msg%n"
+      file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%thread] %level %logger{50} - %msg%n"
+
+#04_feign配置
+feign:
+  okhttp:
+    enabled: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+#06_local project config配置
+config:
+  jwt:
+    #单位：秒
+    expiration: 1800
+    secret: 25f029d402c20563bcfaf9fc34613ee6104646490d907a43ab49aea674510dc23a9ac47cd018db81a868894a42d564283756acbb78a8fa0ffe0d7f6d9951c693
+    issuer: tkp-learn-web
+  cross:
+    flag: false
+  tkpes:
+    host: http://10.130.208.31:8204/tkp-agent-web
+#盟主视频签名对接
+  mengzhu:
+    appId: 2020030719365559007
+    secret: QErplqm4cirbmgsXBipAfsvPBkBcKfkyJHmRPxgssDsdyzOXCnFnNXE4phcX0WQT
+    systemCode: tkp-repository
+    businessCode: OTO5GCourses

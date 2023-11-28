@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.LearnMenuMapper">
+
+    <!-- 查询重要程度标签列表 -->
+    <select id="getMenus" resultType="com.tkp.learn.web.model.bo.MenuBo">
+        SELECT
+            m.code menuCode,
+            m.name menuName,
+            m.icon iconPath,
+            m.upper_code upperCode,
+            m.level,
+            m.order_no sortNo
+        FROM
+            learn_menu m
+        ORDER BY m.order_no
+    </select>
+</mapper>

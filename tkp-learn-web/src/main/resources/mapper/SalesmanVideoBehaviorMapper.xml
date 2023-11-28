@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.tkp.learn.web.dao.SalesmanVideoBehaviorMapper">
+
+    <sql id="Base_Column_List">
+        id,salesman_id,duration,first_play_at,last_stop_at,first_visit_at,last_visit_at,last_visit_city,last_visit_ip
+        ,last_visit_platform,column_id,lesson_id,retry_times,salesman_status,error_message,create_time,clue_id
+        ,receive_time
+    </sql>
+
+    <!-- 根据外勤员工ID获取当月学习时长 -->
+    <select id="getMonthLearningDurationByUserId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select sum(duration) duration
+            FROM
+                video_behavior_his
+            WHERE
+                salesman_id = #{salesmanId}
+            AND MONTH(last_stop_at)=MONTH(NOW())
+            GROUP BY
+                salesman_id
+    </select>
+
+    <!-- 根据外勤员工ID获取当月学习时长 -->
+    <select id="getAllLearningDurationByDate" resultType="com.tkp.learn.web.model.po.VideoBehaviorHisPo">
+        SELECT a.duration,a.salesman_id as salesmanId,a.year,a.month
+        FROM (
+            SELECT
+                duration,
+                salesman_id,
+                MONTH ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END ) as month,
+                YEAR ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END ) as year
+            FROM
+                video_behavior_his
+            WHERE salesman_id = #{salesmanId}
+            <if test="year!=0">
+                and YEAR ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END )=#{year}
+            </if>
+            <if test="month!=0">
+                and MONTH ( CASE WHEN last_stop_at IS NULL THEN create_time ELSE last_stop_at END )=#{month}
+            </if>
+            ) a
+    </select>
+
+
+
+    <!-- 根据外勤员工ID获取总学习时长 -->
+    <select id="getTotalLearningDurationByUserId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select sum(duration) duration
+            FROM
+                video_behavior_his
+            WHERE
+                salesman_id = #{salesmanId}
+            GROUP BY
+                salesman_id
+    </select>
+
+
+</mapper>
