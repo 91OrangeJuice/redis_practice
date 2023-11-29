@@ -7,7 +7,7 @@ server:
 #02_spring配置
 spring:
   datasource:
-    url: jdbc:mysql://10.130.105.129:3306/tkp_repository?characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://10.10.10.10:3306/tkp_repository?characterEncoding=utf8&useSSL=false
     username: tkprepository
     password: "tkprepository"
     dbcp2:
@@ -46,7 +46,7 @@ config:
   cross:
     flag: false
   tkpes:
-    host: http://10.130.208.31:8204/tkp-agent-web
+    host: http://10.11.11.11:8204/tkp-agent-web
 #盟主视频签名对接
   mengzhu:
     appId: 2020030719365559007
